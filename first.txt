@@ -1,0 +1,148 @@
+import * as express from 'express';
+import { matchedData } from 'express-validator/filter';
+import { middleware as validatorMiddleware } from '../middlewares/validator.middleware';
+import { Candidate } from '../models/candidate';
+import { JobSubmission } from '../models/job-submission';
+import { JobService } from '../services/job.service';
+import * as config from 'config';
+import * as elasticsearch from './../lib/elasticsearch';
+import { VacancyQueryOptions } from '../models/vacancy-query-options';
+import { Job } from '../models/job';
+
+export class JobController {
+
+  public static router(): express.Router {
+    const router = express.Router();
+
+    router.route('/')
+      .get(JobController.getAll());
+
+    router.route('/:jobId')
+      .get(JobController.get());
+
+    router.route('/:jobId/applications')
+      .post(JobController.apply());
+
+    return router;
+  }
+
+  private static getAll(): express.RequestHandler[] {
+    return [
+      JobController.getAllHandler,
+    ];
+  }
+
+  private static get(): express.RequestHandler[] {
+    return [
+      ...validatorMiddleware(JobService.itemDataValidation()),
+      JobController.getHandler,
+    ];
+  }
+
+  private static apply(): express.RequestHandler[] {
+    return [
+      ...validatorMiddleware(JobService.applicationDataValidation()),
+      JobController.applyHandler,
+    ];
+  }
+
+  private static async getAllHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
+    try {
+      const queryOptions: VacancyQueryOptions = new VacancyQueryOptions(req);
+      const body = queryOptions.toElasticsearchFormat();
+
+      const jobIndex: string = <string>config.get('elasticsearch.indices.job');
+      const result = await elasticsearch.client.search({
+        body,
+        index: jobIndex,
+        type: '_doc',
+      });
+
+      const jobPromises: Promise<any>[] = [];
+      if (result && result.hits && result.hits.total > 0) {
+        for (let i = 0; i < result.hits.hits.length; i += 1) {
+          jobPromises.push(Job.fromElasticsearch(result.hits.hits[i]._source).toDisplayModel());
+        }
+      }
+
+      const jobs = await Promise.all(jobPromises);
+      // in case Marita needs totalCount anyway.
+      // const totalCount = result.hits.total ? result.hits.total : 0;
+      // const response = {
+      //   jobs,
+      //   metadata: {
+      //     total: totalCount,
+      //   },
+      // };
+
+      // return res.json(response);
+      return res.json(jobs);
+    } catch (e) {
+      return next(e);
+    }
+  }
+
+  private static async getHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
+    try {
+      const id = parseInt(req.params.jobId, 10);
+      const body = {
+        size: 1,
+        query: {
+          term: {
+            id,
+          },
+        },
+      };
+
+      const jobIndex: string = <string>config.get('elasticsearch.indices.job');
+      const result = await elasticsearch.client.search({
+        body,
+        index: jobIndex,
+        type: '_doc',
+        size: 1,
+      });
+
+      let job;
+      if (result && result.hits && result.hits.hits[0] && result.hits.hits[0]._source) {
+        job = await Job.fromElasticsearch(result.hits.hits[0]._source).toDisplayModel();
+      }
+
+      res.send(job).end();
+    } catch (e) {
+      return next(e);
+    }
+  }
+
+  private static async applyHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
+    try {
+
+      // const meta = await req.bullhorn.getEntityMetaData('JobSubmission', ['source']);
+      // return res.send(meta).end();
+
+      const data: any = matchedData(req);
+      const candidate: Candidate = new Candidate();
+
+      candidate
+        .setFirstName(data.firstName)
+        .setLastName(data.lastName)
+        .setEmail(data.email);
+
+      const bullhornCandidate: Candidate = await req.bullhorn.saveCandidate(candidate);
+
+      if (!bullhornCandidate) {
+        return res.sendStatus(422).end();
+      }
+
+      const jobSubmission = new JobSubmission();
+      jobSubmission
+        .setCandidate(bullhornCandidate)
+        .setJobOrder(data.jobId);
+
+      const result = await req.bullhorn.saveJobSubmission(jobSubmission);
+
+      return res.send({ succes: result }).end();
+    } catch (e) {
+      return next(e);
+    }
+  }
+}
