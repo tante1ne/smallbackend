@@ -12,7 +12,7 @@ const Person_1 = require("./../models/Person");
 const req = require("request-promise-native");
 class PersonService {
     constructor() {
-        this.options = {
+        this.getOptions = {
             encoding: 'utf8',
             uri: 'https://mdn.github.io/learning-area/javascript/oojs/json/superheroes.json',
             method: 'GET',
@@ -22,17 +22,29 @@ class PersonService {
     getPersons() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield req(this.options);
+                const response = yield req(this.getOptions);
                 return response.members.map((personData) => {
                     return new Person_1.Person(personData);
                 });
             }
             catch (err) {
                 throw new Error(err);
-                console.log(err);
             }
         });
     }
+    ;
+    savePerson() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let defaultResponse = "saved somewhere";
+                return defaultResponse;
+            }
+            catch (err) {
+                throw new Error(err);
+            }
+        });
+    }
+    ;
 }
 exports.PersonService = PersonService;
 //# sourceMappingURL=PersonService.js.map

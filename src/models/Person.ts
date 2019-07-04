@@ -1,10 +1,12 @@
 export class Person {
     
-    public firstName : string;
-    public lastName : string;
+    public superName : any;
+    public secretIdentity : any;
     public age : number;
     
     constructor(personData: any) {
-        this.firstName = personData.name;
+        this.superName = personData.name;
+        this.secretIdentity = personData.secretIdentity;
+        this.age = personData.age;
     }
 }

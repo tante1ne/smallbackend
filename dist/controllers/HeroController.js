@@ -28,14 +28,11 @@ class PersonController {
     static postPersons(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const personService = new PersonService_1.PersonService();
-                let defaultResponse = yield personService.savePerson();
                 let person = new Person_1.Person(req.body);
                 return res.status(201).send({
                     succes: 'true',
                     message: 'person added succesfully',
-                    person: person,
-                    save: defaultResponse
+                    person: person
                 });
             }
             catch (e) {
@@ -46,4 +43,4 @@ class PersonController {
     }
 }
 exports.PersonController = PersonController;
-//# sourceMappingURL=PersonController.js.map
+//# sourceMappingURL=HeroController.js.map

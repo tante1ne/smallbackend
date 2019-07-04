@@ -3,7 +3,6 @@ import { PersonService } from "./../services/PersonService";
 import { Person } from "./../models/Person";
 
 export class PersonController {
-  p = Person;
 
   public static async getPersons(_req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
@@ -16,8 +15,25 @@ export class PersonController {
       console.error(e);
       return next(e);
     }
-
   };
+
+  public static async postPersons(req: express.Request, res: express.Response, next:express.NextFunction){
+    try{
+      const personService = new PersonService();
+      let defaultResponse = await personService.savePerson();
+      let person = new Person(req.body);
+      return res.status(201).send({
+        succes: 'true',
+        message: 'person added succesfully',
+        person: person,
+        save: defaultResponse
+      })
+    }
+    catch (e) {
+      console.error(e);
+      return next(e)
+    }
+  }
 
 }
 
