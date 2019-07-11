@@ -1,6 +1,8 @@
 import * as express from 'express';
 import { PersonService } from "./../services/PersonService";
 import { Person } from "./../models/Person";
+import { middleware as validatorMiddleWare } from './../middlewares/validator.middleware'
+import { PersonValidationService } from './../services/Person.ValidationService'
 
 export class PersonController {
 
@@ -16,6 +18,13 @@ export class PersonController {
       return next(e);
     }
   };
+
+  public static apply() : express.RequestHandler [] {
+    return [
+      ...validatorMiddleWare(PersonValidationService.applicationDataValidation()),
+      PersonController.postPersons,
+    ];
+  }
 
   public static async postPersons(req: express.Request, res: express.Response, next:express.NextFunction){
     try{

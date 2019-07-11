@@ -10,6 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const Person_1 = require("./../models/Person");
 const req = require("request-promise-native");
+const validator_middleware_1 = require("./../middlewares/validator.middleware");
+const Person_ValidationService_1 = require("./Person.ValidationService");
 class PersonService {
     constructor() {
         this.getOptions = {
@@ -34,6 +36,14 @@ class PersonService {
     }
     ;
     savePerson() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return [
+                ...validator_middleware_1.middleware(Person_ValidationService_1.PersonValidationService.applicationDataValidation()),
+                PersonService.post,
+            ];
+        });
+    }
+    static post() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 let defaultResponse = "saved somewhere";

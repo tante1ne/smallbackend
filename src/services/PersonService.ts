@@ -1,9 +1,7 @@
 import { Person } from "./../models/Person";
-// import { PersonController } from "controllers/PersonController";
 import * as req from 'request-promise-native'
-// import * as express from 'express'
-
-// import {Person} from '@models/Person';
+import {middleware as validatorMiddleware} from './../middlewares/validator.middleware'
+import { PersonValidationService } from "./Person.ValidationService";
 
 export class PersonService {
 
@@ -41,6 +39,13 @@ export class PersonService {
   };
 
   public async savePerson(){
+    return [
+      ...validatorMiddleware(PersonValidationService.applicationDataValidation()),
+      PersonService.post,
+    ];
+  }
+
+  private static async post(){
     try {
       let defaultResponse = "saved somewhere";
       return defaultResponse;

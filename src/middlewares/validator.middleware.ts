@@ -1,5 +1,6 @@
 import express = require("express");
-import {validationResult} from 'express-validator/check'
+import {validationResult} from 'express-validator'
+import { errorFormatter } from "./../lib/error-codes.enum"
 
 
 
@@ -15,5 +16,5 @@ function requestHandler(req: express.Request, res: express.Response, next: expre
     if(!errors.isEmpty()) {
         return res.status(422).json({ errors: errors.mapped() }).end();
     }
-    return next();
+    next();
 }
