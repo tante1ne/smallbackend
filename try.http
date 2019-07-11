@@ -1,0 +1,10 @@
+POST   http://localhost:2020/person
+
+content-type: application/json
+
+{
+  "name": "sample",
+  "age": "500"
+}
+
+
