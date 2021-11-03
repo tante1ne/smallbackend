@@ -32,7 +32,7 @@
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
     "typescript": "^3.5.2",
-    "validator": "^11.0.0"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
